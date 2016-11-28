@@ -1,0 +1,38 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    repositories {
+        flatDir { dirs 'buildtools/repo' }
+        maven {
+            url "http://maven.oa.com/nexus/content/repositories/android"
+        }
+        maven {
+            url "http://maven.oa.com/nexus/content/repositories/jcenter"
+        }
+    }
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.5.0'
+    }
+}
+
+allprojects {
+    repositories {
+        maven {
+            url "http://maven.oa.com/nexus/content/repositories/android"
+        }
+        maven {
+            url "http://maven.oa.com/nexus/content/repositories/jcenter"
+        }
+        maven { url "http://maven.oa.com/nexus/content/repositories/thirdparty/" }
+    }
+    repositories {
+        jcenter()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
