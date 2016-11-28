@@ -115,8 +115,8 @@ public class ZoomViewHelper implements View.OnTouchListener,
         }
         final int nativeInt;
     }
-	
-	public static final float DEFAULT_OVER_MAX_SCALE = 6f;
+
+    public static final float DEFAULT_OVER_MAX_SCALE = 6f;
     public static final float DEFAULT_MAX_SCALE = 3.0f;
     public static final float DEFAULT_MID_SCALE = 2.0f;
     public static final float DEFAULT_MIN_SCALE = 1.0f;
@@ -161,24 +161,6 @@ public class ZoomViewHelper implements View.OnTouchListener,
     }
 
     /**
-     * @return true if the ScaleType is supported.
-     */
-    private static boolean isSupportedScaleType(final ScaleType scaleType) {
-        if (null == scaleType) {
-            return false;
-        }
-
-        switch (scaleType) {
-            case MATRIX:
-                throw new IllegalArgumentException(scaleType.name()
-                        + " is not supported in PhotoView");
-
-            default:
-                return true;
-        }
-    }
-
-    /**
      * Set's the View's ScaleType to Matrix.
      */
     private static void setViewScaleTypeMatrix(IZoomView zoomView) {
@@ -186,9 +168,9 @@ public class ZoomViewHelper implements View.OnTouchListener,
          * PhotoView sets it's own ScaleType to Matrix, then diverts all calls
          * setScaleType to this.setScaleType automatically.
          */
-		if (null != zoomView && !ScaleType.MATRIX.equals(zoomView.getScaleType())) {
-			zoomView.setScaleType(ScaleType.MATRIX);
-		}
+        if (null != zoomView && !ScaleType.MATRIX.equals(zoomView.getScaleType())) {
+            zoomView.setScaleType(ScaleType.MATRIX);
+        }
     }
 
     private WeakReference<View> mView;
@@ -205,7 +187,7 @@ public class ZoomViewHelper implements View.OnTouchListener,
     private final Matrix mSuppMatrix = new Matrix();
     private final RectF mDisplayRect = new RectF();
     private final float[] mMatrixValues = new float[9];
-    
+
     private PointF mLastFocusCenter = new PointF();
 
     // Listeners
@@ -387,7 +369,7 @@ public class ZoomViewHelper implements View.OnTouchListener,
     public float getMediumScale() {
         return mMidScale;
     }
-    
+
     public float getMaximumScale() {
         return mMaxScale;
     }
@@ -397,7 +379,7 @@ public class ZoomViewHelper implements View.OnTouchListener,
     }
 
     float getScale(Matrix m) {
-       return  (float) Math.sqrt((float) Math.pow(getValue(m, Matrix.MSCALE_X), 2) + (float) Math.pow(getValue(m, Matrix.MSKEW_Y), 2));
+        return  (float) Math.sqrt((float) Math.pow(getValue(m, Matrix.MSCALE_X), 2) + (float) Math.pow(getValue(m, Matrix.MSKEW_Y), 2));
     }
 
     public ScaleType getScaleType() {
@@ -420,14 +402,14 @@ public class ZoomViewHelper implements View.OnTouchListener,
         mCoordsFlag = x | y;
     }
     private int getCoordsOrientationX() {
-        if (0 != (mCoordsFlag | COORDS_R2L)) {
+        if (0 != (mCoordsFlag & COORDS_R2L)) {
             return -1;
         } else {
             return 1;
         }
     }
     private int getCoordsOrientationY() {
-        if (0 != (mCoordsFlag | COORDS_B2T)) {
+        if (0 != (mCoordsFlag & COORDS_B2T)) {
             return -1;
         } else {
             return 1;
@@ -613,7 +595,7 @@ public class ZoomViewHelper implements View.OnTouchListener,
                             // 1. get last focus x,y
                             PointF focusCenter = mLastFocusCenter;
                             if (null == focusCenter || (0 == focusCenter.x && 0 == focusCenter.y)) {
-                                focusCenter = minus.android.support.view.Compat.getScaleFocusXY(ev);
+                                focusCenter = Compat.getScaleFocusXY(ev);
                             }
                             // 2. compute current focus x,y
                             if (null == focusCenter || (0 == focusCenter.x && 0 == focusCenter.y)) {
@@ -753,7 +735,7 @@ public class ZoomViewHelper implements View.OnTouchListener,
             // Check to see if the scale is within bounds
             if (scale < mMinScale || scale > mMaxScale) {
                 Log.i(LOG_TAG,
-                                "Scale must be within the range of minScale and maxScale");
+                        "Scale must be within the range of minScale and maxScale");
                 return;
             }
 
@@ -768,7 +750,7 @@ public class ZoomViewHelper implements View.OnTouchListener,
     }
 
     public void setScaleType(ScaleType scaleType) {
-        if (isSupportedScaleType(scaleType) && scaleType != mScaleType) {
+        if (scaleType != mScaleType) {
             mScaleType = scaleType;
 
             // Finally update
@@ -835,10 +817,10 @@ public class ZoomViewHelper implements View.OnTouchListener,
          * PhotoView's getScaleType() will just divert to this.getScaleType() so
          * only call if we're not attached to a PhotoView.
          */
-		if (null != zoomView && !ScaleType.MATRIX.equals(zoomView.getScaleType())) {
-			throw new IllegalStateException(
-					"The View's ScaleType has been changed since attaching a PhotoViewAttacher");
-		}
+        if (null != zoomView && !ScaleType.MATRIX.equals(zoomView.getScaleType())) {
+            throw new IllegalStateException(
+                    "The View's ScaleType has been changed since attaching a PhotoViewAttacher");
+        }
     }
 
     private boolean checkMatrixBounds() {
@@ -971,6 +953,8 @@ public class ZoomViewHelper implements View.OnTouchListener,
         }
     }
 
+    public boolean initBaseMatrix = false;
+
     /**
      * Calculate Matrix for FIT_CENTER
      *
@@ -987,55 +971,66 @@ public class ZoomViewHelper implements View.OnTouchListener,
         final int drawableWidth = zoomInterface.getIntrinsicWidth();
         final int drawableHeight = zoomInterface.getIntrinsicHeight();
 
-        mBaseMatrix.reset();
-
-        final float widthScale = viewWidth / drawableWidth;
-        final float heightScale = viewHeight / drawableHeight;
-
-        if (mScaleType == ScaleType.CENTER) {
-            mBaseMatrix.postTranslate((viewWidth - drawableWidth) / 2F,
-                    (viewHeight - drawableHeight) / 2F);
-
-        } else if (mScaleType == ScaleType.CENTER_CROP) {
-            float scale = Math.max(widthScale, heightScale);
-            mBaseMatrix.postScale(scale, scale);
-            mBaseMatrix.postTranslate((viewWidth - drawableWidth * scale) / 2F,
-                    (viewHeight - drawableHeight * scale) / 2F);
-
-        } else if (mScaleType == ScaleType.CENTER_INSIDE) {
-            float scale = Math.min(1.0f, Math.min(widthScale, heightScale));
-            mBaseMatrix.postScale(scale, scale);
-            mBaseMatrix.postTranslate((viewWidth - drawableWidth * scale) / 2F,
-                    (viewHeight - drawableHeight * scale) / 2F);
-
-        } else {
-            RectF mTempSrc = new RectF(0, 0, drawableWidth, drawableHeight);
-            RectF mTempDst = new RectF(0, 0, viewWidth, viewHeight);
-
-            switch (mScaleType) {
-                case FIT_CENTER:
-                    mBaseMatrix
-                            .setRectToRect(mTempSrc, mTempDst, ScaleToFit.CENTER);
-                    break;
-
-                case FIT_START:
-                    mBaseMatrix.setRectToRect(mTempSrc, mTempDst, ScaleToFit.START);
-                    break;
-
-                case FIT_END:
-                    mBaseMatrix.setRectToRect(mTempSrc, mTempDst, ScaleToFit.END);
-                    break;
-
-                case FIT_XY:
-                    mBaseMatrix.setRectToRect(mTempSrc, mTempDst, ScaleToFit.FILL);
-                    break;
-
-                default:
-                    break;
-            }
+        if(0 == viewWidth || 0 == viewHeight
+                || 0 == drawableWidth || 0 == drawableHeight) {
+            return;
         }
 
-        resetMatrix();
+        mBaseMatrix.reset();
+        try {
+            if(mScaleType == ScaleType.MATRIX) {
+                return;
+            }
+
+            final float widthScale = viewWidth / drawableWidth;
+            final float heightScale = viewHeight / drawableHeight;
+
+            if (mScaleType == ScaleType.CENTER) {
+                mBaseMatrix.postTranslate((viewWidth - drawableWidth) / 2F,
+                        (viewHeight - drawableHeight) / 2F);
+
+            } else if (mScaleType == ScaleType.CENTER_CROP) {
+                float scale = Math.max(widthScale, heightScale);
+                mBaseMatrix.postScale(scale, scale);
+                mBaseMatrix.postTranslate((viewWidth - drawableWidth * scale) / 2F,
+                        (viewHeight - drawableHeight * scale) / 2F);
+
+            } else if (mScaleType == ScaleType.CENTER_INSIDE) {
+                float scale = Math.min(1.0f, Math.min(widthScale, heightScale));
+                mBaseMatrix.postScale(scale, scale);
+                mBaseMatrix.postTranslate((viewWidth - drawableWidth * scale) / 2F,
+                        (viewHeight - drawableHeight * scale) / 2F);
+
+            } else {
+                RectF mTempSrc = new RectF(0, 0, drawableWidth, drawableHeight);
+                RectF mTempDst = new RectF(0, 0, viewWidth, viewHeight);
+
+                switch (mScaleType) {
+                    case FIT_CENTER:
+                        mBaseMatrix
+                                .setRectToRect(mTempSrc, mTempDst, ScaleToFit.CENTER);
+                        break;
+
+                    case FIT_START:
+                        mBaseMatrix.setRectToRect(mTempSrc, mTempDst, ScaleToFit.START);
+                        break;
+
+                    case FIT_END:
+                        mBaseMatrix.setRectToRect(mTempSrc, mTempDst, ScaleToFit.END);
+                        break;
+
+                    case FIT_XY:
+                        mBaseMatrix.setRectToRect(mTempSrc, mTempDst, ScaleToFit.FILL);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        } finally {
+            initBaseMatrix = true;
+            resetMatrix();
+        }
     }
 
     private int getViewWidth(View zoomView) {
@@ -1156,7 +1151,7 @@ public class ZoomViewHelper implements View.OnTouchListener,
 
             // We haven't hit our target scale yet, so post ourselves again
             if (t < 1f) {
-                minus.android.support.view.Compat.postOnAnimation(zoomView, this);
+                Compat.postOnAnimation(zoomView, this);
             }
         }
 
@@ -1253,7 +1248,7 @@ public class ZoomViewHelper implements View.OnTouchListener,
                 mCurrentY = newY;
 
                 // Post On animation
-                minus.android.support.view.Compat.postOnAnimation(zoomView, this);
+                Compat.postOnAnimation(zoomView, this);
             }
         }
     }
@@ -1349,5 +1344,5 @@ public class ZoomViewHelper implements View.OnTouchListener,
         }
 
     }
-    
+
 }
